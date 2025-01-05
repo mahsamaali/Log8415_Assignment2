@@ -1,4 +1,4 @@
-# Log8414_Assignment2
+# Log8415_Assignment2
 # Flask Application Deployment with Orchestrator and Workers
 
 This project deploys an orchestrator and multiple worker nodes using EC2 instances to handle and process requests. The deployment is automated using Python scripts and Docker containers to host Flask-based machine learning applications.
