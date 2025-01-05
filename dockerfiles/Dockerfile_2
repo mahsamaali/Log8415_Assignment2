@@ -1,0 +1,23 @@
+# Base image with Python 3.8
+FROM python:3.8-slim
+
+# Set environment variables to avoid buffering in Docker
+ENV PYTHONUNBUFFERED=1
+
+# Set working directory in the container
+WORKDIR /code
+
+# Copy the current directory contents into the container
+COPY . /code
+
+# Ensure the status.json file exists
+COPY status.json /code/status.json
+
+# Install dependencies
+RUN pip install --no-cache-dir Flask requests
+
+# Expose port 80 to be accessible outside the container
+EXPOSE 80
+
+# Ensure root privileges and start the Flask app
+CMD ["python3", "develop_orchestrator.py"]

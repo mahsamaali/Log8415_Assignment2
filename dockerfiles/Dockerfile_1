@@ -1,0 +1,44 @@
+# Stage 1: Build stage using slim-buster base to avoid Alpine PyTorch issues
+FROM python:3.8-slim-buster AS builder
+
+# Set the working directory in the container to /code
+WORKDIR /code
+
+# Copy the current directory contents into the container
+COPY . /code
+
+# Install minimal system dependencies required for PyTorch and Transformers
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install only required dependencies: Flask, PyTorch CPU-only, and Transformers
+RUN pip install --no-cache-dir torch==2.0.1+cpu -f https://download.pytorch.org/whl/torch_stable.html \
+    && pip install --no-cache-dir flask \
+    && pip install --no-cache-dir transformers[torch]
+
+# Stage 2: Runtime stage (final lightweight image)
+FROM python:3.8-slim-buster
+
+# Set the working directory in the container to /code
+WORKDIR /code
+
+# Copy only the installed Python dependencies from the builder stage
+COPY --from=builder /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy the application code
+COPY . /code
+
+# Remove any unnecessary files in the final image
+RUN rm -rf /usr/local/include/* /usr/local/lib/python3.8/test/*
+
+# Set the environment variable for Flask to know which app to run
+ENV FLASK_APP=develop_ml.py
+
+# Expose the container's port 8000
+EXPOSE 8000
+
+# Command to run the Flask app
+CMD ["flask", "run", "--host=0.0.0.0", "--port=8000"]
